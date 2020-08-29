@@ -1,16 +1,15 @@
-Name:           prometheus-node-exporter
+Name:           prometheus-mysqld-exporter
 Version:        %{pkg_version}
 Release:        %{rpm_release}%{?dist}
-Summary:        Prometheus exporter for machine metrics.
+Summary:        Prometheus exporter for mysqld metrics.
 License:        ASL 2.0
 URL:            https://prometheus.io
 
-Source0:        node_exporter-%{pkg_version}.linux-amd64.tar.gz
+Source0:        mysqld_exporter-%{pkg_version}.linux-amd64.tar.gz
 Source1:        %{name}.service
 Source2:        logrotate.conf
 Source3:        rsyslog.conf
 Source4:        environment.conf
-Source5:        prometheus-node-exporter.xml
 
 BuildRoot:      %{buildroot}
 BuildArch:      x86_64
@@ -24,10 +23,10 @@ Prometheus is a systems and service monitoring system. It collects metrics from
 configured targets at given intervals, evaluates rule expressions, displays the
 results, and can trigger alerts if some condition is observed to be true.
 
-This package contains binary to export node metrics to prometheus.
+This package contains binary to export mysqld metrics to prometheus.
 
 %prep
-%setup -q -n node_exporter-%{version}.linux-amd64
+%setup -q -n mysqld_exporter-%{version}.linux-amd64
 
 %install
 BREAKING_VERSION='0.15.0'
@@ -73,12 +72,12 @@ systemd_unit_file="$systemd_unit_dir/%{name}.service"
 mkdir -p $systemd_unit_dir
 install -m 644 %{SOURCE1} $systemd_unit_file
 
-# Add another hyphen if package version is >= 0.15.0, else delete placeholder (RPM_EXTRA_HYPHEN)
-if [ "$current_version_int" -ge "$BREAKING_VERSION_INT" ]; then
-    sed -i'' 's|RPM_EXTRA_HYPHEN|-|g' $systemd_unit_file
-else
-    sed -i'' 's|RPM_EXTRA_HYPHEN||g' $systemd_unit_file
-fi
+# # Add another hyphen if package version is >= 0.15.0, else delete placeholder (RPM_EXTRA_HYPHEN)
+# if [ "$current_version_int" -ge "$BREAKING_VERSION_INT" ]; then
+#     sed -i'' 's|RPM_EXTRA_HYPHEN|-|g' $systemd_unit_file
+# else
+#     sed -i'' 's|RPM_EXTRA_HYPHEN||g' $systemd_unit_file
+# fi
 
 # Make dependency directory for unit, and put environment file in there.
 mkdir -p $systemd_unit_dir/%{name}.service.d
@@ -86,16 +85,12 @@ install -m 644 %{SOURCE4} $systemd_unit_dir/%{name}.service.d/environment.conf
 
 # Binaries
 mkdir -p %{buildroot}%{_bindir}
-install -m 755 node_exporter %{buildroot}%{_bindir}/node_exporter
+install -m 755 mysqld_exporter %{buildroot}%{_bindir}/mysqld_exporter
 
 # Copy over License and notice
-mkdir -p %{buildroot}/usr/share/prometheus/node_exporter
-install -m 644 LICENSE %{buildroot}/usr/share/prometheus/node_exporter/LICENSE
-install -m 644 NOTICE %{buildroot}/usr/share/prometheus/node_exporter/NOTICE
-
-# Firewalld service definition
-mkdir -p %{buildroot}%{_prefix}/lib/firewalld/services/
-install -m 644 %{SOURCE5} %{buildroot}%{_prefix}/lib/firewalld/services/prometheus-node-exporter.xml
+mkdir -p %{buildroot}/usr/share/prometheus/mysqld_exporter
+install -m 644 LICENSE %{buildroot}/usr/share/prometheus/mysqld_exporter/LICENSE
+install -m 644 NOTICE %{buildroot}/usr/share/prometheus/mysqld_exporter/NOTICE
 
 %pre
 getent group prometheus >/dev/null || groupadd -r prometheus
@@ -128,28 +123,27 @@ echo
 
 %files
 %defattr(-,prometheus,prometheus,-)
-%attr(755, root, root) %{_bindir}/node_exporter
+%attr(755, root, root) %{_bindir}/mysqld_exporter
 %config(noreplace) %attr(644, root, root) %{_sysconfdir}/logrotate.d/%{name}.conf
 %config(noreplace) %attr(644, root, root) %{_sysconfdir}/rsyslog.d/%{name}.conf
 %config(noreplace) %{_unitdir}/%{name}.service
 %config(noreplace) %{_unitdir}/%{name}.service.d/environment.conf
-%config %attr(644, root, root) %{_prefix}/lib/firewalld/services/prometheus-node-exporter.xml
 # Log directory
 %dir %attr(755, prometheus, prometheus) %{_localstatedir}/log/prometheus
 
-/usr/share/prometheus/node_exporter
-/usr/share/prometheus/node_exporter/NOTICE
-/usr/share/prometheus/node_exporter/LICENSE
+/usr/share/prometheus/mysqld_exporter
+/usr/share/prometheus/mysqld_exporter/NOTICE
+/usr/share/prometheus/mysqld_exporter/LICENSE
 
 %changelog
 
-* Sat Dec 14 2019 rmartinsjr@gmail.com
-- Added firewalld service definition
+* Sat Aug 29 2020 rmartinsjr@gmail.com
+- Adapt project to mysqld_exporter
 
 * Mon Feb 04 2019 talk@devghai.com
 - Added support for handling breaking changes introduced in 0.15.0.
 
 * Tue May 23 2017 talk@devghai.com
 - Initial release for packaging Prometheus's Node Exporter.
-  See https://github.com/meowtochondria/node_exporter-rpm/blob/master/README.md.
+  See https://github.com/meowtochondria/mysqld_exporter-rpm/blob/master/README.md.
 

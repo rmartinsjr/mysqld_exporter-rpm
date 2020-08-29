@@ -4,7 +4,7 @@
 # Some initializations.                   #
 ###########################################
 project='prometheus'
-product='node_exporter'
+product='mysqld_exporter'
 pkg_version='latest'
 pkg_release='1'
 isDebug=false
