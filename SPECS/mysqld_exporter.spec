@@ -10,11 +10,12 @@ Source1:        %{name}.service
 Source2:        logrotate.conf
 Source3:        rsyslog.conf
 Source4:        environment.conf
+Source5:        mysqld_exporter
 
 BuildRoot:      %{buildroot}
 BuildArch:      x86_64
 BuildRequires:  systemd-units
-Requires:       systemd, logrotate, rsyslog > 7.2, firewalld-filesystem
+Requires:       systemd, logrotate, rsyslog > 7.2
 Requires(pre):  shadow-utils
 
 %description
@@ -29,31 +30,6 @@ This package contains binary to export mysqld metrics to prometheus.
 %setup -q -n mysqld_exporter-%{version}.linux-amd64
 
 %install
-BREAKING_VERSION='0.15.0'
-#=0*10^2+15*10^1+0*10^0. See version_to_number()
-BREAKING_VERSION_INT='150'
-
-function version_to_number() {
-    # To see if we have package version greater than 0.15.0 we are going to replace '.' and '-'
-    # in version string with ' ', then multiply each number with 10^exponent. Exponent starts off
-    # as count of numbers in string obtained after substituting '.' and '-' with ' ', and decreases
-    # by 1 each time it used. Numbers are processed from left to right. Therefore, most significant
-    # digit on left (or in beginning of string) gets the highest exponent.
-
-    version="$1"
-    nums=$(echo "$version" | tr -s '.-' ' ')
-    total_nums=$(echo "$nums" | wc -w)
-    base=10
-    ret_val=0
-    exponent=$((total_nums - 1))
-    for n in $nums; do
-        ret_val=$(( ret_val + base**exponent * n ))
-        exponent=$((--exponent))
-    done
-    echo $ret_val
-}
-
-current_version_int=$(version_to_number "%{version}")
 
 # Directory for storing log files.
 mkdir -p %{buildroot}%{_localstatedir}/log/prometheus
@@ -72,16 +48,13 @@ systemd_unit_file="$systemd_unit_dir/%{name}.service"
 mkdir -p $systemd_unit_dir
 install -m 644 %{SOURCE1} $systemd_unit_file
 
-# # Add another hyphen if package version is >= 0.15.0, else delete placeholder (RPM_EXTRA_HYPHEN)
-# if [ "$current_version_int" -ge "$BREAKING_VERSION_INT" ]; then
-#     sed -i'' 's|RPM_EXTRA_HYPHEN|-|g' $systemd_unit_file
-# else
-#     sed -i'' 's|RPM_EXTRA_HYPHEN||g' $systemd_unit_file
-# fi
-
 # Make dependency directory for unit, and put environment file in there.
 mkdir -p $systemd_unit_dir/%{name}.service.d
 install -m 644 %{SOURCE4} $systemd_unit_dir/%{name}.service.d/environment.conf
+
+# Add configuration file to /etc/sysconfig
+mkdir -p %{buildroot}%{_sysconfdir}/sysconfig
+install -m 600 %{SOURCE5} %{buildroot}%{_sysconfdir}/sysconfig/mysqld_exporter
 
 # Binaries
 mkdir -p %{buildroot}%{_bindir}
@@ -128,6 +101,7 @@ echo
 %config(noreplace) %attr(644, root, root) %{_sysconfdir}/rsyslog.d/%{name}.conf
 %config(noreplace) %{_unitdir}/%{name}.service
 %config(noreplace) %{_unitdir}/%{name}.service.d/environment.conf
+%config(noreplace) %attr(600, root, root) %{_sysconfdir}/sysconfig/mysqld_exporter
 # Log directory
 %dir %attr(755, prometheus, prometheus) %{_localstatedir}/log/prometheus
 
