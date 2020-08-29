@@ -1,23 +1,27 @@
-# prometheus-node-exporter
+# prometheus-mysqld-exporter
 
 ## Introduction
 
-Code to package various versions of Prometheus project's node_exporter with minimum external dependencies.
+Based on the ideas and code from https://github.com/meowtochondria/node_exporter-rpm, this project packages various versions of mysqld_exporter.
 
 ## Features
 
+Added features:
+* Add /etc/sysconfig/mysqld_exporter, where sysadmins can override default values defined in `/usr/lib/systemd/system/prometheus-mysqld-exporter.service.d/environment.conf` and customize DATA_SOURCE_NAME, required to connect to mysql database.
+
+Features inherited from *node_exporter-rpm* projects:
 * Includes logrotate and rsyslog config to manage and write logs to `/var/log/prometheus/node_exporter.log`.
 * Has SystemD setup to restart node_exporter on failure.
 * Tries to find a balance between practical conventions and file system hierarchy specification at http://www.pathname.com/fhs/pub/fhs-2.3.html.
 * Creates its own user and group called `prometheus` with no interactive shell configured.
 * Various paths that will appear after installation:
-    * Bin path for `node_exporter`: `/usr/bin`
-    * Path to store LICENSE and NOTICE: `/usr/share/prometheus/node_exporter`
-    * Log file: `/var/log/prometheus/node_exporter.log`
-    * Logrotate config: `/etc/logrotate.d/prometheus-node-exporter.conf`
-    * RSyslog config: `/etc/rsyslog.d/prometheus-node-exporter.conf`
-    * SystemD Unit definiton: `/usr/lib/systemd/system/prometheus-node-exporter.service`
-    * Environment variables: `/usr/lib/systemd/system/prometheus-node-exporter.service.d/environment.conf`
+    * Bin path for `mysqld_exporter`: `/usr/bin`
+    * Path to store LICENSE and NOTICE: `/usr/share/prometheus/mysqld_exporter`
+    * Log file: `/var/log/prometheus/mysqld_exporter.log`
+    * Logrotate config: `/etc/logrotate.d/prometheus-mysqld-exporter.conf`
+    * RSyslog config: `/etc/rsyslog.d/prometheus-mysqld-exporter.conf`
+    * SystemD Unit definiton: `/usr/lib/systemd/system/prometheus-mysqld-exporter.service`
+    * Environment variables: `/usr/lib/systemd/system/prometheus-mysqld-exporter.service.d/environment.conf`
 
 ## Pre-requisites
 
@@ -50,10 +54,10 @@ Code to package various versions of Prometheus project's node_exporter with mini
     Please restart RSyslog so that logs are written to /var/log/prometheus:
         systemctl restart rsyslog.service
     To have prometheus start automatically on boot:
-        systemctl enable prometheus-node-exporter.service
+        systemctl enable prometheus-mysql-exporter.service
     Start prometheus:
         systemctl daemon-reload
-        systemctl start prometheus-node-exporter.service
+        systemctl start prometheus-mysqld-exporter.service
     ##################################################################################
     ```
 
