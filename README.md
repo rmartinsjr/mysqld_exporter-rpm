@@ -1,3 +1,5 @@
+# NOT USED - DEPRECATED
+
 # prometheus-mysqld-exporter
 
 ## Introduction
